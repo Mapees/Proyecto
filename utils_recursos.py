@@ -1,6 +1,7 @@
 # Librerias
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
+import numpy as np
 
 # ------------------------------
 #     UTILIDADES RECURSOS
@@ -39,30 +40,6 @@ def obtener_diccionario_liwc():
                     dic_liwc[categoria] = dic_aux
         return dic_liwc, vector_liwc, categorias_liwc
                                                         
-def obtener_vector(data, diccionario, vector_inicial):
-    vector_resultante = []
-    vector_resultante_normalizado = []
-    for line in data:
-        count_tmp = vector_inicial.copy()
-        sentence = line.split()
-        for i in sentence:
-            palabra = i.lower()
-            for categoria in diccionario:
-                dic_aux = diccionario[categoria]        
-                if (palabra in dic_aux):
-                    valor = count_tmp[categoria]
-                    valor = valor + dic_aux[palabra]
-                    count_tmp[categoria] = valor             
-            
-        vector=[]
-        vector_temp_norm = []
-        for key in count_tmp:
-            vector.append(count_tmp[key])
-            vector_temp_norm.append(count_tmp[key]/ len(sentence))
-        vector_resultante.append(vector)
-        vector_resultante_normalizado.append(vector_temp_norm)
-    return vector_resultante, vector_resultante_normalizado
-
 def obtener_vector_pn_liwc(data, diccionario): 
     vector_resultante = []
     vector_resultante_normalizado = []
@@ -84,7 +61,7 @@ def obtener_vector_pn_liwc(data, diccionario):
         vector_norm.extend([positivo / len(sentence), negativo / len(sentence)])
         vector_resultante.append(vector_tmp)
         vector_resultante_normalizado.append(vector_norm)
-    return vector_resultante, vector_resultante_normalizado 
+    return np.array(vector_resultante), np.array(vector_resultante_normalizado)
 
 # ------------------------------
 #           EMOLEX
@@ -128,13 +105,38 @@ def obtener_vector_pn_emolex(data, diccionario):
         vector_norm.extend([positivo / len(sentence), negativo / len(sentence)])
         vector_resultante.append(vector_tmp)
         vector_resultante_normalizado.append(vector_norm)
-    return vector_resultante, vector_resultante_normalizado 
+    return np.array(vector_resultante), np.array(vector_resultante_normalizado)
  
-    
+
 
 # ------------------------------
 #       OTRAS UTILIDADES
 # ------------------------------
+def obtener_vector(data, diccionario, vector_inicial):
+    vector_resultante = []
+    vector_resultante_normalizado = []
+    for line in data:
+        count_tmp = vector_inicial.copy()
+        sentence = line.split()
+        for i in sentence:
+            palabra = i.lower()
+            for categoria in diccionario:
+                dic_aux = diccionario[categoria]        
+                if (palabra in dic_aux):
+                    valor = count_tmp[categoria]
+                    valor = valor + dic_aux[palabra]
+                    count_tmp[categoria] = valor             
+            
+        vector=[]
+        vector_temp_norm = []
+        for key in count_tmp:
+            vector.append(count_tmp[key])
+            vector_temp_norm.append(count_tmp[key]/ len(sentence))
+        vector_resultante.append(vector)
+        vector_resultante_normalizado.append(vector_temp_norm)
+    return np.array(vector_resultante), np.array(vector_resultante_normalizado)
+    
+    
 def obtener_categorias_diccionario(diccionario):
     categorias = []    
     for key in diccionario.keys():
@@ -161,34 +163,19 @@ def duplicar_vectores(a, b):
         vector_resultado.append(v)
     return vector_resultado
 
-def anyadir_vectores(a, b):
-    c = a.toarray()
-    tam = len(c)
-    vector_resultado = []
-    for i in range(tam):
-        v1 = c[i]
-        v2 = b[i]
-        v = []
-        for x in v1:
-            v.append(x)
-        for y in v2:
-            v.append(y)
-        vector_resultado.append(v)
-    return vector_resultado
-
 # ------------------------------
 #       BAG of WORDS
 # ------------------------------
 def obtener_vector_bag(train, test):
     vectorizer = CountVectorizer()
-    train = vectorizer.fit_transform(train)
-    test = vectorizer.transform(test)
-    print ("En los {} tweets de entrenamiento habían {} palabras distintas ".format(train.shape[0], train.shape[1]))
-    return train, test
+    train_bag = vectorizer.fit_transform(train)
+    test_bag = vectorizer.transform(test)
+   # print ("En los {} tweets de entrenamiento habian {} palabras distintas ".format(train.shape[0], train.shape[1]))
+    return train_bag, test_bag
 
 def obtener_vector_tfidf(train, test):
     transformer = TfidfTransformer()
-    train =  transformer.fit_transform(train).toarray()
-    test = transformer.transform(test).toarray()
-    return train, test
-    
+    train_tf =  transformer.fit_transform(train)
+    test_tf = transformer.transform(test)
+    return train_tf, test_tf
+   
