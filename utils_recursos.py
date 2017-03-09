@@ -1,6 +1,6 @@
 # Librerias
 from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.feature_extraction.text import TfidfTransformer
+from sklearn.feature_extraction.text import TfidfVectorizer
 import numpy as np
 
 # ------------------------------
@@ -135,33 +135,6 @@ def obtener_vector(data, diccionario, vector_inicial):
         vector_resultante.append(vector)
         vector_resultante_normalizado.append(vector_temp_norm)
     return np.array(vector_resultante), np.array(vector_resultante_normalizado)
-    
-    
-def obtener_categorias_diccionario(diccionario):
-    categorias = []    
-    for key in diccionario.keys():
-        categorias.append(key)
-    return categorias
-    
-def crear_vector_por_categoria(diccionario):
-    count_diccionario = {}
-    for key in diccionario.keys():
-        count_diccionario[key] = 0
-    return count_diccionario
-    
-def duplicar_vectores(a, b):
-    vector_resultado = []
-    tam = len(a)
-    for i in range(tam):        
-        v1 = a[i]
-        v2 = b[i]
-        v = []
-        for x in v1:
-            v.append(x)
-        for y in v2:
-            v.append(y)
-        vector_resultado.append(v)
-    return vector_resultado
 
 # ------------------------------
 #       BAG of WORDS
@@ -174,8 +147,7 @@ def obtener_vector_bag(train, test):
     return train_bag, test_bag
 
 def obtener_vector_tfidf(train, test):
-    transformer = TfidfTransformer()
+    transformer = TfidfVectorizer()
     train_tf =  transformer.fit_transform(train)
     test_tf = transformer.transform(test)
     return train_tf, test_tf
-   

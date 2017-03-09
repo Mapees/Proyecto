@@ -1,12 +1,13 @@
 # Librerias
 
 import re
+import nltk
 from nltk.tokenize import TweetTokenizer
 from nltk.corpus import stopwords
 
 ##### LEER DATA #####
 def obtener_data(fichero):
-    with open (fichero, 'r') as f:
+   with open (fichero, encoding="utf8") as f:
         data = f.readlines()
         return data
 
@@ -45,7 +46,8 @@ emoticons_str = r"""
 emoticon_re = re.compile(r'^'+emoticons_str+'$', re.VERBOSE | re.IGNORECASE)
 
 ## Si no pertenece a un emoticono se pasa a minusculas
-def tokenize(data):
+#TWEET TOKENIZE
+def tokenize_tweet(data):
     corpus = []
     for line in data:
         tokens = TweetTokenizer().tokenize(line)
@@ -54,6 +56,16 @@ def tokenize(data):
         corpus.append(sentence)
     return corpus
     
+## Si no pertenece a un emoticono se pasa a minusculas
+# TOKENIZADOR NLTK
+def tokenize_word_token(data):
+    corpus = []
+    for line in data:
+        tokens = nltk.tokenize.word_tokenize(line)
+        tokens = [token if emoticon_re.search(token) else token.lower() for token in tokens]
+        sentence = " ".join(tokens)
+        corpus.append(sentence)
+    return corpus
 # Quitar las stopwords de un corpus
 def quitar_stopwords(data):
     corpus =  []
