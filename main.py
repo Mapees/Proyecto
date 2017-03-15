@@ -175,6 +175,7 @@ vector_test_split_liwc_pn = {'irony':[], 'sarcasm': [], 'not': [],'other': []}
 vector_test_split_liwc = {'irony':[], 'sarcasm': [], 'not': [],'other': []}
 # Emoticonos
 vector_test_split_emot = {'irony':[], 'sarcasm': [], 'not': [],'other': []}
+
 def dividir_tweets_hashtag():
 
     print("Separando el test por hashtag...")
@@ -222,7 +223,6 @@ def dividir_tweets_hashtag():
             vector_test_split_emot['other'].append(vector_emoticonos_train[post])
     
 def experimentosEmoticonos():
-    
     
     print("ENTRENAMIENTO: 7 - Emoticonos + BoW ")       
     bow_train_e = sp.hstack((train_tf, vector_emoticonos_train))
@@ -298,10 +298,7 @@ def experimentosSplitSarcasm(tipo):
     if(tipo == "bow") :
         train_b, bow_test_categ = utils_recursos.obtener_vector_bag(train_token, tweets_cat['sarcasm'])
     else:
-        print("B")
         train_b, bow_test_categ = utils_recursos.obtener_vector_tfidf(train_token, tweets_cat['sarcasm'])
-
-
 
     bow_train_emo = sp.hstack((train_b, vect_train_emolex))
     bow_test_categ_emo = sp.hstack((bow_test_categ, vector_test_split_emo['sarcasm']))   
@@ -341,9 +338,7 @@ def experimentosSplitNot(tipo):
     
     if(tipo == "bow") :
         train_b, bow_test_categ = utils_recursos.obtener_vector_bag(train_token, tweets_cat['not'])
-
     else:
-        print("B")
         train_b, bow_test_categ = utils_recursos.obtener_vector_tfidf(train_token, tweets_cat['not'])
   
     bow_train_emo = sp.hstack((train_b, vect_train_emolex))
@@ -380,14 +375,10 @@ def experimentosSplitNot(tipo):
 
 
 def experimentosSplitOthers(tipo):
-
-    
     
     if(tipo == "bow") :
         train_b, bow_test_categ = utils_recursos.obtener_vector_bag(train_token, tweets_cat['other'])
-
     else:
-        print("B")
         train_b, bow_test_categ = utils_recursos.obtener_vector_tfidf(train_token, tweets_cat['other'])
   
     bow_train_emo = sp.hstack((train_b, vect_train_emolex))
@@ -426,8 +417,6 @@ def experimentosSplitOthers(tipo):
 
     
 def experimentosTfIdf():
-
-
 
     print("ENTRENAMIENTO: 45 - TFIDF")
     utils_train.clas_svr(train_tf, train_labels, test_tf, test_labels)
@@ -538,10 +527,10 @@ def gridSearch():
         print(classification_report(y_true, y_pred))
         print()
 
+
 # ARTICULO
 #experimentosPositivoNegativo()
 #experimentosTodasCategorias()
-
 
 #experimentosBagOfWords()
 
