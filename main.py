@@ -8,83 +8,95 @@ import re
 
 from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import classification_report
-from sklearn.svm import SVC
+from sklearn.pipeline import Pipeline
+from sklearn.svm import SVR
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import CountVectorizer
 
 #from sklearn.model_selection import cross_val_predict, cross_val_score
 
-# Obtener datos
-print('Obteniendo datos...')
-train, train_labels = utils_corpus.obtener_train();
-test, test_labels = utils_corpus.obtener_test();
+def cargaDatosBasica():
+    print('Obteniendo datos...')
+    x, x_l = utils_corpus.obtener_train();
+    y, y_l = utils_corpus.obtener_test();
 
-# Tokenizar
-print('Tokenizando el corpus...')
-# tokenize_tweet
-# tokenize_word_token
-train_token = utils_corpus.tokenize_tweet(train);
-test_token = utils_corpus.tokenize_tweet(test);
+    # Tokenizar
+    print('Tokenizando el corpus...')
+    # tokenize_tweet
+    # tokenize_word_token
+    train_token = utils_corpus.tokenize_tweet(x);
+    test_token = utils_corpus.tokenize_tweet(y);
+    
+    # Obtener corpus tokenizados y sin stopwords
+    #print('Quitando stop words...')
+    #train_token = utils_corpus.quitar_stopwords(train_token)
+    #test_token = utils_corpus.quitar_stopwords(test_token)
+	
+	################################
+    ## Obtener datos entrenamientos
+    # BoW
+    print('Obteniendo BoW...')
+    bag_train, bag_test = utils_recursos.obtener_vector_bag(train_token, test_token);
+    print('Obteniendo TFIDF...')
+    train_tf, test_tf = utils_recursos.obtener_vector_tfidf(train_token, test_token);
 
-# Obtener corpus tokenizados y sin stopwords
-#print('Quitando stop words...')
-#train_token = utils_corpus.quitar_stopwords(train_token)
-#test_token = utils_corpus.quitar_stopwords(test_token)
-
-# Recursos - LIWC y EMOLEX
-print('Obteniendo diccionarios LIWC y Emolex...')
-dic_liwc, vector_ini_liwc, categorias_liwc = utils_recursos.obtener_diccionario_liwc()
-dic_emolex, vector_ini_emolex = utils_recursos.obtener_diccionario_emolex()
-
-################################
-## Obtener datos entrenamientos
-# BoW
-print('Obteniendo BoW...')
-bag_train, bag_test = utils_recursos.obtener_vector_bag(train_token, test_token);
-print('Obteniendo TFIDF...')
-train_tf, test_tf = utils_recursos.obtener_vector_tfidf(train_token, test_token);
+    return train_token, x_l, test_token, y_l, bag_train, bag_test, train_tf, test_tf;
 
 
-######     VECTORES     ######
-print('Obteniendo vectores LIWC...')
-# Todas las categorias
-vect_train_liwc, vect_train_liwc_norm = utils_recursos.obtener_vector(train_token, dic_liwc, vector_ini_liwc)
-vect_test_liwc, vect_test_liwc_norm = utils_recursos.obtener_vector(test_token, dic_liwc, vector_ini_liwc)
-# Posemo y negemo
-vect_train_liwc_pn, vect_train_liwc_pn_norm = utils_recursos.obtener_vector_pn_liwc(train_token, dic_liwc)
-vect_test_liwc_pn, vect_test_liwc_pn_norm = utils_recursos.obtener_vector_pn_liwc(test_token, dic_liwc)
+def cargaDatosLIWC(train_token, test_token):
+    # Recurso - LIWC
+    print('Obteniendo diccionario LIWC...')
+    dic_liwc, vector_ini_liwc, categorias_liwc = utils_recursos.obtener_diccionario_liwc()
+    
+    ######     VECTORES     ######
+    print('Obteniendo vectores LIWC...')
+    # Todas las categorias
+    vect_train_liwc, vect_train_liwc_norm = utils_recursos.obtener_vector(train_token, dic_liwc, vector_ini_liwc)
+    vect_test_liwc, vect_test_liwc_norm = utils_recursos.obtener_vector(test_token, dic_liwc, vector_ini_liwc)
+    # Posemo y negemo
+    vect_train_liwc_pn, vect_train_liwc_pn_norm = utils_recursos.obtener_vector_pn_liwc(train_token, dic_liwc)
+    vect_test_liwc_pn, vect_test_liwc_pn_norm = utils_recursos.obtener_vector_pn_liwc(test_token, dic_liwc)
+    
+    return vect_train_liwc, vect_train_liwc_norm, vect_test_liwc, vect_test_liwc_norm, vect_train_liwc_pn, vect_train_liwc_pn_norm, vect_test_liwc_pn, vect_test_liwc_pn_norm;
 
-print('Obteniendo vectores Emolex...')
-# Todas las categorias
-vect_train_emolex, vect_train_emolex_norm = utils_recursos.obtener_vector(train_token, dic_emolex, vector_ini_emolex)
-vect_test_emolex, vect_test_emolex_norm = utils_recursos.obtener_vector(test_token, dic_emolex, vector_ini_emolex)
-# Positivo y negativo
-vect_train_emolex_pn, vect_train_emolex_pn_norm = utils_recursos.obtener_vector_pn_emolex(train_token, dic_emolex)
-vect_test_emolex_pn, vect_test_emolex_pn_norm = utils_recursos.obtener_vector_pn_emolex(test_token, dic_emolex)
 
-print('Obteniendo vectores de Emoticonos...')
-# Train
-vector_inicial_train_emoticonos = utils_emoticonos.obtener_diccionario_emoticonos(train_token)
-vector_emoticonos_train, vector_emoticonos_train_norm = utils_emoticonos.obtener_vector(train_token, vector_inicial_train_emoticonos)
+def cargaDatosEmolex(train_token, test_token):
+    # Recurso - LIWC
+    print('Obteniendo diccionario Emolex...')
+    dic_emolex, vector_ini_emolex = utils_recursos.obtener_diccionario_emolex()
+    
+    print('Obteniendo vectores Emolex...')
+    # Todas las categorias
+    vect_train_emolex, vect_train_emolex_norm = utils_recursos.obtener_vector(train_token, dic_emolex, vector_ini_emolex)
+    vect_test_emolex, vect_test_emolex_norm = utils_recursos.obtener_vector(test_token, dic_emolex, vector_ini_emolex)
+    # Positivo y negativo
+    vect_train_emolex_pn, vect_train_emolex_pn_norm = utils_recursos.obtener_vector_pn_emolex(train_token, dic_emolex)
+    vect_test_emolex_pn, vect_test_emolex_pn_norm = utils_recursos.obtener_vector_pn_emolex(test_token, dic_emolex)
+    
+    return vect_train_emolex, vect_train_emolex_norm, vect_test_emolex, vect_test_emolex_norm, vect_train_emolex_pn, vect_train_emolex_pn_norm, vect_test_emolex_pn, vect_test_emolex_pn_norm;
 
-# Test
-vector_inicial_test_emoticonos = utils_emoticonos.obtener_diccionario_emoticonos(test_token)
-vector_emoticonos_test, vector_emoticonos_test_norm = utils_emoticonos.obtener_vector(test_token, vector_inicial_train_emoticonos)
-print('Transformando vectores de entrenamiento...')
-# Vectores Emolex: vect_train_emolex - vect_train_emolex_pn
-# LIWC + EMOLEX
-vect_train_liwc_emo = np.hstack((vect_train_liwc, vect_train_emolex))
-vect_train_liwc_emo_norm =  np.hstack((vect_train_liwc_norm, vect_train_emolex_norm))
+def cargaDatosEmoticonos(train_token, test_token):
+    print('Obteniendo vectores de Emoticonos...')
+    # Train
+    vector_inicial_train_emoticonos = utils_emoticonos.obtener_diccionario_emoticonos(train_token)
+    vector_emoticonos_train, vector_emoticonos_train_norm = utils_emoticonos.obtener_vector(train_token, vector_inicial_train_emoticonos)
 
-vect_test_liwc_emo = np.hstack((vect_test_liwc, vect_test_emolex))
-vect_test_liwc_emo_norm = np.hstack((vect_test_liwc_norm, vect_test_emolex_norm))
+    # Test
+    vector_inicial_test_emoticonos = utils_emoticonos.obtener_diccionario_emoticonos(test_token)
+    vector_emoticonos_test, vector_emoticonos_test_norm = utils_emoticonos.obtener_vector(test_token, vector_inicial_test_emoticonos)
+    
+    return vector_emoticonos_train, vector_emoticonos_train_norm, vector_emoticonos_test, vector_emoticonos_test_norm;
 
-# Vectores LIWC: vect_train_liwc - vect_train_liwc_pn
-# LIWC + EMOLEX  - P/N
-vect_train_liwc_emo_pn = np.hstack((vect_train_liwc_pn, vect_train_emolex_pn))
-vect_train_liwc_emo_norm_pn = np.hstack((vect_train_liwc_pn_norm, vect_train_emolex_pn_norm))
-
-vect_test_liwc_emo_pn = np.hstack((vect_test_liwc_pn, vect_test_emolex_pn))
-vect_test_liwc_emo_norm_pn = np.hstack((vect_test_liwc_pn_norm, vect_test_emolex_pn_norm))
-
+def cargaUnionRecursos(t1, t2, t1_norm, t2_norm, te1, te2, te1_norm, te2_norm):	
+    print('Transformando vectores de entrenamiento...')
+    r1 = np.hstack((t1, t2))
+    r1_norm =  np.hstack((t1_norm, t2_norm))
+    
+    r2 = np.hstack((te1, te2))
+    r2_norm = np.hstack((te1_norm, te2_norm))
+    
+    return r1, r1_norm, r2, r2_norm;        
+  
 
 print('Comenzando a entrenar...')
 
@@ -413,8 +425,6 @@ def experimentosSplitOthers(tipo):
     print("ENTRENAMIENTO: 44 - Split OTHERS BoW + LIWC + EMOLEX p/n")
     utils_train.clas_svr(bow_train_liwc_emo_pn, train_labels, bow_test_categ_liwc_emo_pn, test_labels_split['other'])
     
-
-
     
 def experimentosTfIdf():
 
@@ -453,9 +463,6 @@ def experimentosTfIdf():
 
 
 
-
-
-
 def experimentosBaseline():
        
     print("ENTRENAMIENTO: Tweet Tokenize - Sin quitar stop words")
@@ -490,44 +497,59 @@ def experimentosBaseline():
     
     
 def gridSearch():
-    tuned_parameters = [{'kernel': ['rbf'], 'gamma': [1e-3, 1e-4],  'C': [1, 10, 100, 1000]},
-                         {'kernel': ['linear'], 'C': [1, 10, 100, 1000]}
-                         ]
+
+    pipeline = Pipeline([  
+            #('vect', CountVectorizer()),
+            ('tfidf', TfidfVectorizer()),
+            ('clf', SVR(kernel='rbf', gamma=0.1))
+            ])
+    
+    parameters = {
+        #'vect__max_df': (0.5, 0.75, 1.0),
+        #'vect__max_features': (None, 5000, 10000, 50000),
+        #'vect__ngram_range': ((1, 1), (1, 2), (1,3), (1,4), (1,5), (1,6), (1, 7), (1,8), (1,9)),
+        'tfidf__use_idf': (True, False),
+        'tfidf__norm': ('l1', 'l2'),
+        'tfidf__ngram_range': ((1, 1), (1, 2), (1,3), (1,4), (1,5), (1,6), (1, 7), (1,8), (1,9)),
+        'clf__kernel': ['rbf', 'linear', 'sigmoid'],
+        'clf__C':[1, 10, 100, 1000],
+        'clf__degree': [1,2,3]
+        # 'clf__alpha': (0.00001, 0.000001),
+        # 'clf__penalty': ('l2', 'elasticnet'),
+        #'clf__n_iter': (10, 50, 80),
+    }
 
     scores = ['precision']
-    
+    # scores = ['precision', 'mean_absolute_error']
+
     for score in scores:
+
         print("# Tuning hyper-parameters for %s" % score)
         print()
-
-        clf = GridSearchCV(SVC(C=1), tuned_parameters, cv=5, scoring='%s_macro' % score)
-        # Error
-        #raise ValueError("Unknown label type: %r" % y_type)
-        #ValueError: Unknown label type: 'continuous'
-        clf.fit(bag_train, np.array(train_labels))
+        svr = GridSearchCV(pipeline, cv=5, param_grid=parameters)
+        svr.fit(train_token, train_labels)
+        
+        print("pipeline:", [name for name, _ in pipeline.steps])
+        print("parameters:")
+        print(parameters)
         
         print("Best parameters set found on development set:")
         print()
-        print(clf.best_params_)
+        print(svr.best_params_)
         print()
         print("Grid scores on development set:")
         print()
-        means = clf.cv_results_['mean_test_score']
-        stds = clf.cv_results_['std_test_score']
-        for mean, std, params in zip(means, stds, clf.cv_results_['params']):
-            print("%0.3f (+/-%0.03f) for %r" % (mean, std * 2, params))
-            print()
 
         print("Detailed classification report:")
         print()
         print("The model is trained on the full development set.")
         print("The scores are computed on the full evaluation set.")
         print()
-        y_true, y_pred = bag_test, clf.predict(test_labels)
+        y_true, y_pred = test_labels, svr.predict(test_token)
         print(classification_report(y_true, y_pred))
         print()
 
-
+###########################################################
 # ARTICULO
 #experimentosPositivoNegativo()
 #experimentosTodasCategorias()
@@ -547,11 +569,23 @@ def gridSearch():
 #experimentosSplitNot("otro")
 #experimentosSplitOthers("otro")
 
-
+###########################################################
 # PROYECTO
 # Nos quedamos con tweet tokenizer y con stopwords
 
-experimentosBaseline();
+# Obtener datos
+train_token, train_labels, test_token, test_labels, bag_train, bag_test, train_tf, test_tf = cargaDatosBasica();
+vect_train_liwc, vect_train_liwc_norm, vect_test_liwc, vect_test_liwc_norm, vect_train_liwc_pn, vect_train_liwc_pn_norm, vect_test_liwc_pn, vect_test_liwc_pn_norm = cargaDatosLIWC(train_token, test_token);
+vect_train_emolex, vect_train_emolex_norm, vect_test_emolex, vect_test_emolex_norm, vect_train_emolex_pn, vect_train_emolex_pn_norm, vect_test_emolex_pn, vect_test_emolex_pn_norm = cargaDatosEmolex(train_token, test_token);
+vector_emoticonos_train, vector_emoticonos_train_norm, vector_emoticonos_test, vector_emoticonos_test_norm = cargaDatosEmoticonos(train_token, test_token);
 
-# Error grid search
-#gridSearch();
+#print("LIWC + EMOLEX")
+vect_train_liwc_emo, vect_train_liwc_emo_norm, vect_test_liwc_emo, vect_test_liwc_emo_norm = cargaUnionRecursos(vect_train_liwc, vect_train_emolex, vect_train_liwc_norm, vect_train_emolex_norm, vect_test_liwc, vect_test_emolex, vect_test_liwc_norm, vect_test_emolex_norm);
+
+print("LIWC + EMOLEX  - P/N ")
+vect_train_liwc_emo_pn, vect_train_liwc_emo_norm_pn, vect_test_liwc_emo_pn, vect_test_liwc_emo_norm_pn = cargaUnionRecursos(vect_train_liwc_pn, vect_train_emolex_pn, vect_train_liwc_pn_norm, vect_train_emolex_pn_norm, vect_test_liwc_pn, vect_test_emolex_pn, vect_test_liwc_pn_norm, vect_test_emolex_pn_norm);
+
+# Entrenamiento
+#experimentosBaseline();
+
+gridSearch();
